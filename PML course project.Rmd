@@ -1,0 +1,120 @@
+Practical Machine Learning Course Project
+========================================================
+## Background
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here:  [http://groupware.les.inf.puc-rio.br/har] . 
+
+## Data 
+
+
+The training data for this project are available here: 
+
+[https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv]
+
+The test data are available here: 
+
+[https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv]
+
+## Analysis
+### Goal
+The goal of this analysis is to predict the manner in which they did the exercise. Therefore we need to find the best model to fit the training data, which will be furthur used to predict on the test dataset.
+
+### Preprocessing
+
+As always, the first job is to download and read in the data. Also package *caret* will be needed for this anlysis. 
+```{r,message=FALSE}
+library(caret)
+```
+
+```{r}
+training<-read.csv("pml-training.csv")
+testing<-read.csv("pml-testing.csv")
+
+```
+
+The training dataset has 19622 observations and 160 variable, which contains the outcome *classe* and 159 predictors. 
+```{r}
+dim(training)
+```
+
+The testing dataset has 20 observation and do not have variable *classe*, which we need to predict.
+
+While looking at the 159 predictors in training dataset, we don't necessarily need every one of them. Hence I tried to removed the NA columns and variables that are obviously irrelevent. 
+```{r}
+training <- training[, which(as.numeric(colSums(is.na(training)))==0)]
+training <- training[, which(as.numeric(colSums(training==""))==0)]
+training<-training[,c(6:60)]
+training$new_window<-I(as.character(training$new_window)=="yes")*1
+```
+I ended up with 55 variables. Although there is certainly space for improvement. The more preprocess we do, the less time it will takes to calculate the model. (I am pretty lazy so I decided to keep R running over night)
+
+### Cross validation
+
+For the purpose of cross validation, we will need to split the *training* dataset into *train* and *test*, while the so called *testing* dataset is not actually used in this part. I take 70% of the sample data into *train* and 30% into *test*
+
+
+```{r}
+intrain<-createDataPartition(y=training$classe,p=0.7,list=FALSE)
+train<-training[intrain,]
+test<-training[-intrain,]
+
+```
+
+Here is how the classe variable looks like in *train*.
+
+```{r fig.width=7, fig.height=6}
+ggplot(data=train,aes(x=classe,fill=classe))+geom_histogram(binwidth=0.05)
+```
+### Fit model
+
+Now that  the pre-processing is done, we should go for the most important step, which is fitting the model. While there are a couple of methods we can use, I decided to go with the *random forest method*. This method is known for accuracy. But it usually takes more time. Since the dataset we have is not huge, I would prefer to sacrifice time for the model accuracy.
+
+Here is the code to apply the *random forest method*. I also used principla components analysis with 95% of variation captured. 
+
+```{r,eval=FALSE}
+fit<-train(classe~.,data=train,method="rf",
+           preProcess="pca",verbose=FALSE,na.remove=TRUE,thresh=0.95)
+
+``` 
+
+
+```{r,echo=FALSE}
+load("~/MachineLearning/model save.RData")
+```
+
+```{r fig.width=7, fig.height=6}
+plot(fit)
+```
+
+The model fitted well on the training set.
+```{r}
+fit
+```
+
+100% accurate on training set.
+```{r}
+confusionMatrix(train$classe,predict(fit,newdata=train))
+```
+### Accuracy
+Let's test how accurate the model is on the *test dataset*.
+```{r}
+confusionMatrix(predict(fit,newdata=test),test$classe)
+```
+As shown above, the model has 97.55% accuracy on the test dataset, which is pretty accurate. The out-of-sample error rate is 2.45%
+
+Here is a plot with accuracy by different classe.
+```{r fig.width=7, fig.height=6}
+typecnt<-data.frame(table(test$classe))
+correct<-data.frame(table(test$classe[prediction==test$classe]))
+correct$accuracy=correct$Freq/typecnt$Freq
+colnames(correct)[1]<-"classe"
+qplot(data=correct,x=classe,y=accuracy,colour=classe)+geom_point(size=5)
+```
+
+### Predicting
+With a good model, it is straight foward to make prediction on *testing dataset*.
+
+```{r eval=FALSE}
+data.frame(predict(fit,testing))
+```
+
