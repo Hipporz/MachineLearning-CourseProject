@@ -22,8 +22,9 @@ The goal of this analysis is to predict the manner in which they did the exercis
 ### Preprocessing
 
 As always, the first job is to download and read in the data. Also package *caret* will be needed for this anlysis. 
-```{r,message=FALSE}
+```{r,message=FALSE, include=FALSE}
 library(caret)
+library(ggplot2)
 ```
 
 ```{r}
@@ -79,7 +80,7 @@ fit<-train(classe~.,data=train,method="rf",
 
 
 ```{r,echo=FALSE}
-load("~/MachineLearning/model save.RData")
+load("model save.RData")
 ```
 
 ```{r fig.width=7, fig.height=6}
@@ -92,7 +93,7 @@ fit
 ```
 
 100% accurate on training set.
-```{r}
+```{r ,message=FALSE}
 confusionMatrix(train$classe,predict(fit,newdata=train))
 ```
 ### Accuracy

@@ -23,9 +23,6 @@ The goal of this analysis is to predict the manner in which they did the exercis
 
 As always, the first job is to download and read in the data. Also package *caret* will be needed for this anlysis. 
 
-```r
-library(caret)
-```
 
 
 ```r
@@ -107,7 +104,7 @@ fit
 ## Random Forest 
 ## 
 ## 13737 samples
-##    54 predictors
+##    54 predictor
 ##     5 classes: 'A', 'B', 'C', 'D', 'E' 
 ## 
 ## Pre-processing: principal component signal extraction, scaled, centered 
@@ -118,9 +115,9 @@ fit
 ## Resampling results across tuning parameters:
 ## 
 ##   mtry  Accuracy  Kappa  Accuracy SD  Kappa SD
-##   2     1         1      0.004        0.004   
-##   30    0.9       0.9    0.008        0.01    
-##   50    0.9       0.9    0.008        0.01    
+##    2    1.0       1.0    0.004        0.004   
+##   28    0.9       0.9    0.008        0.010   
+##   54    0.9       0.9    0.008        0.011   
 ## 
 ## Accuracy was used to select the optimal model using  the largest value.
 ## The final value used for the model was mtry = 2.
@@ -133,9 +130,7 @@ confusionMatrix(train$classe,predict(fit,newdata=train))
 ```
 
 ```
-## Loading required package: randomForest
-## randomForest 4.6-10
-## Type rfNews() to see new features/changes/bug fixes.
+## Warning: package 'randomForest' was built under R version 3.1.1
 ```
 
 ```
